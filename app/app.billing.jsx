@@ -26,7 +26,7 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
   const { billing, session } = await authenticate.admin(request);
 
-  const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_APP_NAME || "multi-shipment-tracker"}/app/billing`;
+  const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_APP_NAME || "multi-shipment-tracker-live-1"}/app/billing`;
 
   await billing.require({
     plans: [MONTHLY_PLAN],
