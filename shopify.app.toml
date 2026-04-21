@@ -2,7 +2,7 @@
 
 client_id = "29cf1070570f400cf06763d9523a69d0"
 name = "multi-shipment-tracker"
-application_url = "https://multi-shipment-tracker-live-1.onrender.com/"
+application_url = "https://multi-shipment-tracker-live-1.onrender.com"
 embedded = true
 
 [build]

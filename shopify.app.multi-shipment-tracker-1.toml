@@ -2,11 +2,12 @@
 
 client_id = "ead8d3417c0d1bdbcd99ffb6a40fa02b"
 name = "multi-shipment-tracker"
-application_url = "https://multi-shipment-tracker-live-1.onrender.com/"
+application_url = "https://multi-shipment-tracker-live-1.onrender.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
+
 
 [webhooks]
 api_version = "2026-01"
