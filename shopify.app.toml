@@ -2,11 +2,11 @@
 
 client_id = "29cf1070570f400cf06763d9523a69d0"
 name = "multi-shipment-tracker"
-application_url = "https://example.com"
+application_url = "https://multi-shipment-tracker-live-1.onrender.com/"
 embedded = true
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
 include_config_on_deploy = true
 
 [webhooks]
@@ -34,7 +34,11 @@ api_version = "2026-01"
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_orders,write_orders,read_products,write_products,read_customers,write_fulfillments,read_fulfillments,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_merchant_managed_fulfillment_orders,write_merchant_managed_fulfillment_orders"
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://multi-shipment-tracker-live-1.onrender.com/auth/callback",
+  "https://multi-shipment-tracker-live-1.onrender.com/auth/shopify/callback",
+  "https://multi-shipment-tracker-live-1.onrender.com/api/auth/callback"
+]
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
