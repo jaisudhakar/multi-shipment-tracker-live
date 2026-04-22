@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useFetcher } from "react-router";
-import { authenticate } from "../shopify.server";
+import { useNavigate, useFetcher, redirect } from "react-router";
+import { authenticate, MONTHLY_PLAN } from "../shopify.server";
 import { createTracker } from "../models/tracker.server";
 import { getShopifyCarrierName } from "../utils/carriers";
 import {
@@ -9,7 +9,22 @@ import {
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { billing } = await authenticate.admin(request);
+
+  try {
+    const { hasActivePayment } = await billing.check({
+      plans: [MONTHLY_PLAN],
+      isTest: true,
+    });
+
+    if (!hasActivePayment) {
+      return redirect("/app/billing");
+    }
+  } catch (error) {
+    console.error("Billing check failed:", error);
+    return redirect("/app/billing");
+  }
+
   return {};
 };
 
@@ -114,7 +129,7 @@ export const action = async ({ request }) => {
     };
   }
 
-  // ---------- INTENT 2: Save Tracker (+ optional email) ----------
+  // ---------- INTENT 2: Save Tracker ----------
   if (intent === "saveTracker") {
     const orderId       = formData.get("orderId");
     const orderName     = formData.get("orderName");
@@ -131,14 +146,12 @@ export const action = async ({ request }) => {
       return { error: "Order, Carrier, and Tracking ID are required." };
     }
 
-    // Step A — Save to DB
     await createTracker({
       shop: session.shop,
       orderId, orderName, productId, productName, productImage,
       carrier, trackingId, customUrl,
     });
 
-    // Step B — Send email via Shopify (if checked)
     let emailStatus = "not_sent";
 
     if (sendEmail) {
@@ -146,14 +159,12 @@ export const action = async ({ request }) => {
         const fulfillmentOrders    = JSON.parse(formData.get("fulfillmentOrders")    || "[]");
         const existingFulfillments = JSON.parse(formData.get("existingFulfillments") || "[]");
 
-        // Look for an OPEN fulfillment order first
         const matchingFO = fulfillmentOrders.find((fo) =>
           fo.status === "OPEN" &&
           fo.lineItems.some((li) => li.lineItemId === lineItemId && li.remainingQuantity > 0)
         );
 
         if (matchingFO) {
-          // CASE A: Order is UNFULFILLED → create new fulfillment
           const matchingLineItem = matchingFO.lineItems.find(
             (li) => li.lineItemId === lineItemId
           );
@@ -192,7 +203,6 @@ export const action = async ({ request }) => {
             : "sent";
 
         } else if (existingFulfillments.length > 0) {
-          // CASE B: Order is ALREADY FULFILLED → update tracking on existing fulfillment
           const latestFulfillment = existingFulfillments[existingFulfillments.length - 1];
 
           const updateResponse = await admin.graphql(`
