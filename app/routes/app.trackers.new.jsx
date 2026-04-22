@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useFetcher, redirect } from "react-router";
-import { authenticate, MONTHLY_PLAN } from "../shopify.server";
+import { useNavigate, useFetcher } from "react-router";
+import { authenticate } from "../shopify.server";
 import { createTracker } from "../models/tracker.server";
 import { getShopifyCarrierName } from "../utils/carriers";
 import {
@@ -11,18 +11,14 @@ import {
 export const loader = async ({ request }) => {
   const { billing } = await authenticate.admin(request);
 
-  try {
-    const { hasActivePayment } = await billing.check({
-      plans: [MONTHLY_PLAN],
-      isTest: true,
-    });
+  // Check if merchant has active subscription (or in trial)
+  const { hasActivePayment } = await billing.check({
+    plans: [MONTHLY_PLAN],
+    isTest: true, // Change to false when launching on App Store
+  });
 
-    if (!hasActivePayment) {
-      return redirect("/app/billing");
-    }
-  } catch (error) {
-    console.error("Billing check failed:", error);
-    // On billing error, redirect to billing page (safer than breaking)
+  // If no subscription → redirect to billing page
+  if (!hasActivePayment) {
     return redirect("/app/billing");
   }
 
