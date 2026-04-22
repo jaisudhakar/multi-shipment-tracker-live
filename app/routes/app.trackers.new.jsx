@@ -11,14 +11,18 @@ import {
 export const loader = async ({ request }) => {
   const { billing } = await authenticate.admin(request);
 
-  // Check if merchant has active subscription (or in trial)
-  const { hasActivePayment } = await billing.check({
-    plans: [MONTHLY_PLAN],
-    isTest: true, // Change to false when launching on App Store
-  });
+  try {
+    const { hasActivePayment } = await billing.check({
+      plans: [MONTHLY_PLAN],
+      isTest: true,
+    });
 
-  // If no subscription → redirect to billing page
-  if (!hasActivePayment) {
+    if (!hasActivePayment) {
+      return redirect("/app/billing");
+    }
+  } catch (error) {
+    console.error("Billing check failed:", error);
+    // On billing error, redirect to billing page (safer than breaking)
     return redirect("/app/billing");
   }
 
