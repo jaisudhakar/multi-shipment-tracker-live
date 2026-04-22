@@ -9,19 +9,7 @@ import {
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
-  const { billing } = await authenticate.admin(request);
-
-  // Check if merchant has active subscription (or in trial)
-  const { hasActivePayment } = await billing.check({
-    plans: [MONTHLY_PLAN],
-    isTest: true, // Change to false when launching on App Store
-  });
-
-  // If no subscription → redirect to billing page
-  if (!hasActivePayment) {
-    return redirect("/app/billing");
-  }
-
+  await authenticate.admin(request);
   return {};
 };
 
