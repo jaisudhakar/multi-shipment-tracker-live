@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useFetcher, redirect } from "react-router";
-import { authenticate, MONTHLY_PLAN } from "../shopify.server";
+import { useNavigate, useFetcher } from "react-router";
+import { authenticate } from "../shopify.server";
 import { createTracker } from "../models/tracker.server";
 import { getShopifyCarrierName } from "../utils/carriers";
 import {
@@ -9,22 +9,7 @@ import {
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
-  const { billing } = await authenticate.admin(request);
-
-  try {
-    const { hasActivePayment } = await billing.check({
-      plans: [MONTHLY_PLAN],
-      isTest: true,
-    });
-
-    if (!hasActivePayment) {
-      return redirect("/app/billing");
-    }
-  } catch (error) {
-    console.error("Billing check failed:", error);
-    return redirect("/app/billing");
-  }
-
+  await authenticate.admin(request);
   return {};
 };
 

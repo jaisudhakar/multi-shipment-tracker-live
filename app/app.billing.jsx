@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, redirect } from "react-router";
 import { authenticate, MONTHLY_PLAN } from "../shopify.server";
 import {
   Page, Card, Layout, Button, Text, Badge, BlockStack, InlineStack, List, Banner
@@ -10,7 +10,7 @@ export const loader = async ({ request }) => {
   try {
     const { hasActivePayment, appSubscriptions } = await billing.check({
       plans: [MONTHLY_PLAN],
-      isTest: true, // Set to false when launching on App Store
+      isTest: true,
     });
 
     return {
@@ -26,35 +26,45 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
   const { billing, session } = await authenticate.admin(request);
 
-  const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_APP_NAME || "multi-shipment-tracker-live-1"}/app/billing`;
+  try {
+    const billingCheck = await billing.check({
+      plans: [MONTHLY_PLAN],
+      isTest: true,
+    });
 
-  await billing.require({
-    plans: [MONTHLY_PLAN],
-    isTest: true,
-    onFailure: async () =>
-      billing.request({
-        plan: MONTHLY_PLAN,
-        isTest: true,
-        returnUrl,
-      }),
-  });
+    if (billingCheck.hasActivePayment) {
+      return { alreadySubscribed: true };
+    }
 
-  return null;
+    const shopName = session.shop.replace(".myshopify.com", "");
+    const returnUrl = `https://admin.shopify.com/store/${shopName}/apps/multi-shipment-tracker/app/billing`;
+
+    const { confirmationUrl } = await billing.request({
+      plan: MONTHLY_PLAN,
+      isTest: true,
+      returnUrl,
+    });
+
+    return redirect(confirmationUrl);
+  } catch (error) {
+    console.error("Billing request failed:", error);
+    return { error: "Unable to start trial. Please try again later." };
+  }
 };
 
 export default function Billing() {
-  const { hasActivePayment, currentPlan } = useLoaderData();
+  const { hasActivePayment } = useLoaderData();
 
   return (
     <Page title="Pricing & Billing">
       <Layout>
-        <Layout.Section>
-          {hasActivePayment && (
+        {hasActivePayment && (
+          <Layout.Section>
             <Banner tone="success" title="You're subscribed!">
               <p>You have an active subscription. Enjoy unlimited trackers!</p>
             </Banner>
-          )}
-        </Layout.Section>
+          </Layout.Section>
+        )}
 
         <Layout.Section>
           <Card>
@@ -87,7 +97,7 @@ export default function Billing() {
               </List>
 
               {!hasActivePayment && (
-                <form method="post">
+                <form method="post" target="_top">
                   <Button variant="primary" size="large" submit fullWidth>
                     Start 7-Day Free Trial
                   </Button>
@@ -96,7 +106,7 @@ export default function Billing() {
 
               {hasActivePayment && (
                 <Banner tone="info">
-                  <p>To cancel or change your plan, go to <strong>Shopify Admin → Settings → Apps and sales channels</strong>.</p>
+                  <p>To cancel your plan, go to <strong>Shopify Admin → Settings → Apps and sales channels</strong>.</p>
                 </Banner>
               )}
 
