@@ -1,16 +1,17 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache openssl
-
-EXPOSE 3000
+RUN apk add --no-cache openssl curl
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=3000
+
+EXPOSE 3000
 
 COPY package.json package-lock.json* ./
 
-RUN npm install && npm cache clean --force
+RUN npm install
 
 COPY . .
 
@@ -18,4 +19,6 @@ RUN npx prisma generate
 
 RUN npm run build
 
-CMD sh -c "echo '=== MIGRATIONS ===' && npx prisma migrate deploy; echo '=== STARTING APP ==='; exec npm run start"
+RUN ls -la build/ && ls -la build/server/
+
+CMD ["node", "./build/server/index.js"]
