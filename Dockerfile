@@ -1,4 +1,5 @@
 FROM node:20-alpine
+
 RUN apk add --no-cache openssl
 
 EXPOSE 3000
@@ -9,10 +10,12 @@ ENV NODE_ENV=production
 
 COPY package.json package-lock.json* ./
 
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 COPY . .
 
+RUN npx prisma generate
+
 RUN npm run build
 
-CMD ["npm", "run", "docker-start"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && npm run start"]
