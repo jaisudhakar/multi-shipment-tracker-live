@@ -21,4 +21,5 @@ RUN npm run build
 
 RUN echo "=== BUILD CONTENTS ===" && ls -la build/ && ls -la build/server/ && ls -la build/client/ || echo "BUILD MISSING!"
 
-CMD sh -c "echo '=== STARTING APP ==='; echo 'PORT:' $PORT; echo 'NODE_ENV:' $NODE_ENV; echo 'Listing build folder:'; ls -la build/server/; echo '=== LAUNCHING NODE ==='; node --trace-warnings ./build/server/index.js 2>&1; echo 'EXIT CODE:' $?"
+ENTRYPOINT ["sh", "-c"]
+CMD ["echo '=== STARTING APP ===' && node --trace-warnings ./build/server/index.js 2>&1"]
