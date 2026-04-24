@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache openssl curl
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
@@ -19,6 +19,6 @@ RUN npx prisma generate
 
 RUN npm run build
 
-RUN ls -la build/ && ls -la build/server/
+RUN echo "=== BUILD CONTENTS ===" && ls -la build/ && ls -la build/server/ && ls -la build/client/ || echo "BUILD MISSING!"
 
-CMD ["node", "./build/server/index.js"]
+CMD sh -c "echo '=== STARTING APP ==='; echo 'PORT:' $PORT; echo 'NODE_ENV:' $NODE_ENV; echo 'Listing build folder:'; ls -la build/server/; echo '=== LAUNCHING NODE ==='; node --trace-warnings ./build/server/index.js 2>&1; echo 'EXIT CODE:' $?"
